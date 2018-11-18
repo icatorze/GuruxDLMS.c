@@ -4,7 +4,7 @@ TARGET   = gurux.dlms.server.bin
 CC       = gcc
 
 # compiling flags here
-CFLAGS   = -std=gnu99 -Wall -I.
+CFLAGS   = -std=gnu99 -Wall -I. -Og -g -ggdb -v
 
 LINKER   = gcc -o
 
