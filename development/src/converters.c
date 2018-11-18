@@ -608,7 +608,7 @@ int obj_pushSetupToString(gxPushSetup* object, char** buff)
     bb_addString(&ba, "Index: 2 Value: ");
     //TODO: bb_addIntAsString(&ba, object->pushObjectList);
     bb_addString(&ba, "\r\nIndex: 3 Value: ");
-    //TODO: bb_addIntAsString(&ba, object->sendDestinationAndMethod);
+    bb_addString(&ba, object->destination);
     bb_addString(&ba, "\r\nIndex: 4 Value: ");
     //TODO: bb_addIntAsString(&ba, object->communicationWindow);
     bb_addString(&ba, "\r\nIndex: 5 Value: ");
