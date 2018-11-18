@@ -58,6 +58,7 @@
 #include "../../development/include/gxobjects.h"
 #include "../../development/include/gxget.h"
 #include "../../development/include/notify.h"
+#include "../../development/include/gxmem.h"
 
 //If OS is not used get time.
 //All compilers don't know or use time.
@@ -562,27 +563,27 @@ int addInstantDataProfileGeneric(
         arr_push(&instantData.captureObjects, key_init(&apparentPower, co_init(2, 0)));
     }
 
-    //Signed active power, kW (+ Forward; – Reverse)
+    //Signed active power, kW (+ Forward; ï¿½ Reverse)
     {
         const unsigned char ln[6] = { 1,0,1,7,0,255 };
         cosem_init2((gxObject*)&signedActivePower, DLMS_OBJECT_TYPE_REGISTER, ln);
         arr_push(&instantData.captureObjects, key_init(&signedActivePower, co_init(2, 0)));
     }
 
-    //Signed reactive power, kvar (+ Lag; – Lead)
+    //Signed reactive power, kvar (+ Lag; ï¿½ Lead)
     {
         const unsigned char ln[6] = { 1,0,37,7,0,255 };
         cosem_init2((gxObject*)&signedReactivePower, DLMS_OBJECT_TYPE_REGISTER, ln);
         arr_push(&instantData.captureObjects, key_init(&signedReactivePower, co_init(2, 0)));
     }
 
-    //Number of power — failures
+    //Number of power ï¿½ failures
     {
         const unsigned char ln[6] = { 0,0,96,7,0,255 };
         cosem_init2((gxObject*)&numberOfPowerFailures, DLMS_OBJECT_TYPE_REGISTER, ln);
         arr_push(&instantData.captureObjects, key_init(&numberOfPowerFailures, co_init(2, 0)));
     }
-    //Cumulative power — failure duration.
+    //Cumulative power ï¿½ failure duration.
     {
         const unsigned char ln[6] = { 0,0,94,91,8,255 };
         cosem_init2((gxObject*)&cumulativePowerFailureDuration, DLMS_OBJECT_TYPE_REGISTER, ln);
@@ -2078,13 +2079,45 @@ void svr_postWrite(
     //Show updated values.
 #if defined(_WIN32) || defined(_WIN64) || defined(__linux__)      
     gxValueEventArg *e;
-    int ret, pos;
+    int ret, pos, p;
     char* buff;
+    //char **aux;
+    DLMS_OBJECT_TYPE type;
+    gxKey *obj;
+    psCapObj_t *psObjList;
+
     for (pos = 0; pos != args->size; ++pos)
     {
         if ((ret = vec_getByIndex(args, pos, &e)) == 0)
         {
 #ifndef GX_DLMS_MICROCONTROLLER
+        	type = (DLMS_OBJECT_TYPE)e->target->objectType;
+        	switch(type)
+        	{
+        	case DLMS_OBJECT_TYPE_PUSH_SETUP:
+        		;
+        		FILE* f = fopen(PERSIST, "w");
+        		psObjList = gxmalloc(sizeof(psCapObj_t)*(((gxPushSetup*)e->target)->pushObjectList).size);
+        		for (p = 0; p != (((gxPushSetup*)e->target)->pushObjectList).size; ++p)
+        		{
+        			if ((ret = arr_getByIndex(&(((gxPushSetup*)e->target)->pushObjectList),p,(void**)&obj))==0)
+       				{
+        				memcpy(psObjList[p].ln,((gxObject *)obj->key)->logicalName,6);
+        				psObjList[p].attrIndex=((gxCaptureObject*)obj->value)->attributeIndex;
+        				psObjList[p].dataIndex=((gxCaptureObject*)obj->value)->dataIndex;
+       				}
+
+        		}
+        		fwrite(psObjList,sizeof(psObjList)*p,1,f);
+        		fclose(f);
+        		gxfree(psObjList);
+        		break;
+        	default:
+        		break;
+
+        	}
+
+
             if ((ret = obj_toString(e->target, &buff)) != 0)
             {
                 printf("svr_postWrite::obj_toString failed %d.", ret);

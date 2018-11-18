@@ -27,11 +27,19 @@
 char DATAFILE[FILENAME_MAX];
 char IMAGEFILE[FILENAME_MAX];
 
+char PERSIST[FILENAME_MAX];
+
 int svr_start(
     connection *con,
     unsigned short port);
 
 #endif //defined(_WIN32) | defined(_WIN64) || defined(__linux__)
+
+typedef struct _psCaptObj {
+	unsigned char ln[6];
+	unsigned char attrIndex;
+	unsigned char dataIndex;
+}psCapObj_t;
 
 int svr_InitObjects(
     dlmsServerSettings *settings);
